@@ -1,12 +1,11 @@
 import {v2 as cloudinary} from "cloudinary";
 import Product from "../models/Product.js";
-import fs from 'fs';
+import cloudinary from "../configs/cloudinary.js";
+import Product from "../models/Product.js";
 
 // add product : /api/product/add
-
 export const addProduct = async (req, res) => {
   try {
-
     if (!req.body.productData) {
       return res.json({ success: false, message: "productData is missing" });
     }
@@ -17,27 +16,35 @@ export const addProduct = async (req, res) => {
       return res.json({ success: false, message: "At least one image is required" });
     }
 
-    // Upload images to Cloudinary
+    // upload images to cloudinary using buffer
     const imagesUrl = await Promise.all(
-      req.files.map(async (file) => {
-        const result = await cloudinary.uploader.upload(file.path, { resource_type: "image" });
-
-        // delete the local file after upload
-        fs.unlinkSync(file.path);
-
-        return result.secure_url;
+      req.files.map((file) => {
+        return new Promise((resolve, reject) => {
+          cloudinary.uploader.upload_stream(
+            { folder: "grocery-products" },
+            (error, result) => {
+              if (error) reject(error);
+              else resolve(result.secure_url);
+            }
+          ).end(file.buffer);
+        });
       })
     );
 
-    // Save product in DB
-    const product = await Product.create({ ...productData, image: imagesUrl });
+    // save product
+    const product = await Product.create({
+      ...productData,
+      image: imagesUrl
+    });
 
     res.json({ success: true, message: "Product Added", product });
+
   } catch (error) {
-    console.log(error);
-    res.json({ success: false, message: error.message });
+    console.error(error);
+    res.status(500).json({ success: false, message: error.message });
   }
 };
+
 
 
 // get product : /api/product/list
