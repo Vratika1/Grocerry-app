@@ -1,19 +1,19 @@
 import mongoose from 'mongoose';
 
-
 const orderSchema = new mongoose.Schema({
-
-    userId: { type: String , required : true, ref: 'user'},
+    userId: { type: String , required: true, ref: 'user'},
     items: [{
-        product : { type: String , required : true, ref: 'product'},
-        quantity : { type: String , required : true}
+        product : { type: String , required: true, ref: 'product'},
+        quantity : { type: Number , required: true}   // ✅ Number
     }],
-    amount : { type: String , required : true},
-    address : { type: String , required : true , ref : 'address'},
+    amount : { type: Number , required: true },      // ✅ Number
+    address : { type: String , required: true , ref : 'address'},
     status : { type: String , default : 'Order Placed'},
-    paymentType : { type: String , required : true},
-    isPaid : { type: Boolean , required : true , default : false},
-}, { timeseries : true})
+    paymentType : { type: String , required: true},
+    isPaid : { type: Boolean , required: true , default: false},
+}, { timestamps: true });  // ✅ timestamps, not timeseries
+
+
 
 
 const Order = mongoose.model.order || mongoose.model('order', orderSchema);
