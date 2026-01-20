@@ -25,7 +25,7 @@ export const register = async (req, res) =>{
 
         const hashedPassword = await bcrypt.hash(password, 10);
 
-        const user = await User.create({name,email,password : hashedPassword});
+        const user = await User.create({name,email,password : hashedPassword} );
 
 
         const token = jwt.sign({id:user._id}, process.env.SECRET_KEY, {expiresIn:'7d'});
@@ -46,7 +46,11 @@ secure: process.env.NODE_ENV === 'production', // must be true in prod (HTTPS)
 });
 
 
-        return res.json({success:true , user:{email:user.email, name:user.name}})
+        return res.json({success:true ,  user: {
+        email: user.email,
+        name: user.name,
+        cartItems: user.cartItems || {}
+    }})
 
     } catch (error) {
         console.log(error.message)
@@ -94,7 +98,11 @@ export const login = async (req,res) =>{
 });
 
 
-        return res.json({success:true , user:{email:user.email, name:user.name}})
+        return res.json({success:true ,  user: {
+        email: user.email,
+        name: user.name,
+        cartItems: user.cartItems || {}
+    }})
 
 
     } catch (error) {

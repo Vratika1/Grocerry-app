@@ -7,7 +7,7 @@ const Login = () => {
     const [name, setName] = React.useState("");
     const [email, setEmail] = React.useState("");
     const [password, setPassword] = React.useState("");
-    const {setShowUserLogin ,setUser , axios,navigate} = useAppContext();
+    const {setShowUserLogin ,setUser , axios,navigate ,setCartItems} = useAppContext();
 
     const onSubmitHandler = async(event)=>{
        event.preventDefault();
@@ -20,6 +20,7 @@ const Login = () => {
 
                 if(authRes.data.success){
                     setUser(authRes.data.user); // reliable user state
+                    setCartItems(authRes.data.user.cartItems || {});
                     setShowUserLogin(false);
                     navigate('/');
                 } else {
