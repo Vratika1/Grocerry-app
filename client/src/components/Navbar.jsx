@@ -17,7 +17,7 @@ const Navbar = () => {
             if(data.success){
                 toast.success(data.message);
                 setUser(null);
-                setCartItems({});
+                setCartItems([]);
                 navigate('/');
             }else{
                 toast.error(data.message);

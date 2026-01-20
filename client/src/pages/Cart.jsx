@@ -18,36 +18,66 @@ const Cart = () => {
     const getCart = () =>{
 
 
-         if (!products.length || !cartItems) return;
+//          if (!products.length || !cartItems){
+//             console.log("Product not found for item:", item);
+//             return;
+//          } 
 
-    // const tempArray = Object.keys(cartItems).map((key) => {
-    //     const product = products.find((p) => p._id === key);
-    //     if (product) {
-    //         return {
-    //             product,
-    //             quantity: cartItems[key],   // always get quantity from cartItems
-    //             productId: key
-    //         };
-    //     }
-    //     return null;
-    // }).filter(Boolean);
+//           console.log("cartItems in getCart:", cartItems);
+//     console.log("products in getCart:", products);
 
-    // setCartArray(tempArray);
+//     // const tempArray = Object.keys(cartItems).map((key) => {
+//     //     const product = products.find((p) => p._id === key);
+//     //     if (product) {
+//     //         return {
+//     //             product,
+//     //             quantity: cartItems[key],   // always get quantity from cartItems
+//     //             productId: key
+//     //         };
+//     //     }
+//     //     return null;
+//     // }).filter(Boolean);
+
+//     // setCartArray(tempArray);
 
 
 
-    const tempArray = cartItems.map((item) => {
-    const product = products.find((p) => p._id === item.productId);
-    if (!product) return null;
-    return {
-        product,
-        quantity: item.quantity,
-        productId: item.productId
-    };
-}).filter(Boolean);
+//     const tempArray = cartItems.map((item) => {
+//     const product = products.find((p) => p._id === item.productId);
+//     if (!product) return null;
+//     return {
+//         product,
+//         quantity: item.quantity,
+//         productId: item.productId
+//     };
+// }).filter(Boolean);
 
-setCartArray(tempArray);
+//     console.log("tempArray for cart display:", tempArray);
+// setCartArray(tempArray);
 
+
+
+
+ if (!products.length || !Array.isArray(cartItems)) return;
+
+    const tempArray = cartItems.map(item => {
+        const product = products.find(
+            p => String(p._id) === String(item.productId)
+        );
+
+        if (!product) {
+            console.log("❌ Product not found:", item.productId);
+            return null;
+        }
+
+        return {
+            product,
+            quantity: item.quantity,
+            productId: item.productId
+        };
+    }).filter(Boolean);
+
+    setCartArray(tempArray);
 
     }
 
@@ -180,23 +210,40 @@ setCartArray(tempArray);
                         <p>Weight: <span>{item.product.weight || "N/A"}</span></p>
                         <div className='flex items-center'>
                             <p>Qty:</p>
-                            <select
+                            {/* <select
                             onChange={(e) => updateCartItem(item.productId, Number(e.target.value))}
-                            value={cartItems[item.productId]}
+                           value={cartItems.find(i => i.productId === item.productId)?.quantity || 1}
+
                             className='outline-none'
                             >
-                            {Array(Math.max(cartItems[item.productId] || 1, 9)).fill('').map((_, idx) => (
-                                <option key={idx} value={idx + 1}>{idx + 1}</option>
+                            {Array(Math.max(cartItems.find(i => i.productId === item.productId)?.quantity || 1, 9))
+                                .fill('')
+                                .map((_, idx) => (
+                                    <option key={idx} value={idx + 1}>{idx + 1}</option>
                                 ))}
 
-                            </select>
+
+                            </select> */}
+                            <select
+    onChange={(e) => updateCartItem(item.productId, Number(e.target.value))}
+    value={cartItems.find(i => i.productId === item.productId)?.quantity || 1}
+    className='outline-none'
+>
+    {Array(9).fill('').map((_, idx) => (
+        <option key={idx} value={idx + 1}>{idx + 1}</option>
+    ))}
+</select>
+
                         </div>
                         </div>
                     </div>
                     </div>
 
                     {/* Subtotal for this product */}
-                    <p className="text-center">{currency}{item.product.offerPrice * cartItems[item.productId]}</p>
+                    {/* <p className="text-center">{currency}{item.product.offerPrice * cartItems[item.productId]}</p> */}
+
+                    <p className="text-center">{currency}{item.product.offerPrice * item.quantity}</p>
+
 
                     {/* Remove button */}
                     <button onClick={() => removeFromCart(item.productId)} className="cursor-pointer mx-auto">
