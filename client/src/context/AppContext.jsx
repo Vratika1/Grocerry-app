@@ -16,7 +16,7 @@ export const AppContextProvider = ({ children }) => {
     const [showUserLogin, setShowUserLogin] = useState(false);
     const [products, setProducts] = useState([]);
     const currency = import.meta.env.VITE_CURRENCY;
-    const [cartItems, setCartItems] = useState({});
+    const [cartItems, setCartItems] = useState([]);
     const [searchQuery, setSearchQuery] = useState({});
    
 
@@ -48,14 +48,16 @@ export const AppContextProvider = ({ children }) => {
             const {data} = await axios.get('/api/user/is-auth');
             if(data.success){
                 setUser(data.user);
-                setCartItems(data.user.cartItems);
+                setCartItems(data.user.cartItems || []);
                
             }else{
                 toast.error(data.message);
+                 setCartItems([]);
             }
             
         } catch (error) {
             setUser(null);
+             setCartItems([]);
         }
     }
 
