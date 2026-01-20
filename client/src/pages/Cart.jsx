@@ -20,19 +20,34 @@ const Cart = () => {
 
          if (!products.length || !cartItems) return;
 
-    const tempArray = Object.keys(cartItems).map((key) => {
-        const product = products.find((p) => p._id === key);
-        if (product) {
-            return {
-                product,
-                quantity: cartItems[key],   // always get quantity from cartItems
-                productId: key
-            };
-        }
-        return null;
-    }).filter(Boolean);
+    // const tempArray = Object.keys(cartItems).map((key) => {
+    //     const product = products.find((p) => p._id === key);
+    //     if (product) {
+    //         return {
+    //             product,
+    //             quantity: cartItems[key],   // always get quantity from cartItems
+    //             productId: key
+    //         };
+    //     }
+    //     return null;
+    // }).filter(Boolean);
 
-    setCartArray(tempArray);
+    // setCartArray(tempArray);
+
+
+
+    const tempArray = cartItems.map((item) => {
+    const product = products.find((p) => p._id === item.productId);
+    if (!product) return null;
+    return {
+        product,
+        quantity: item.quantity,
+        productId: item.productId
+    };
+}).filter(Boolean);
+
+setCartArray(tempArray);
+
 
     }
 

@@ -116,10 +116,20 @@ export const AppContextProvider = ({ children }) => {
     // updaate cart item quantity
 
     const updateCartItem = (itemId, quantity) => {
-        let cartData = structuredClone(cartItems);
-        cartData[itemId] = quantity;
-        setCartItems(cartData);
-        toast.success("cart updated");
+        // let cartData = structuredClone(cartItems);
+        // cartData[itemId] = quantity;
+        // setCartItems(cartData);
+        // toast.success("cart updated");
+
+
+         let cartData = [...cartItems];
+    const index = cartData.findIndex(item => item.productId === itemId);
+    if (index !== -1) {
+        cartData[index].quantity = quantity;
+    }
+    setCartItems(cartData);
+    toast.success("Cart updated");
+
     }    
 
 
@@ -128,15 +138,31 @@ export const AppContextProvider = ({ children }) => {
     const removeFromCart = (itemId) => {
 
 
-        let cartData = structuredClone(cartItems);
-        if (cartData[itemId]) {
-            cartData[itemId] -= 1;
-            if (cartData[itemId] <= 0) {
-                delete cartData[itemId];   // remove from cart completely
-            }
-            setCartItems(cartData);
-            toast.success("Removed from cart");
+        // let cartData = structuredClone(cartItems);
+        // if (cartData[itemId]) {
+        //     cartData[itemId] -= 1;
+        //     if (cartData[itemId] <= 0) {
+        //         delete cartData[itemId];   // remove from cart completely
+        //     }
+        //     setCartItems(cartData);
+        //     toast.success("Removed from cart");
+        // }
+
+
+
+         let cartData = [...cartItems];
+    const index = cartData.findIndex(item => item.productId === itemId);
+
+    if (index !== -1) {
+        cartData[index].quantity -= 1;
+        if (cartData[index].quantity <= 0) {
+            cartData.splice(index, 1); // remove item completely
         }
+    }
+
+    setCartItems(cartData);
+    toast.success("Removed from cart");
+
 
     }
 
