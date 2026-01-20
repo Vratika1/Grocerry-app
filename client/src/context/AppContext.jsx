@@ -126,11 +126,16 @@ export const AppContextProvider = ({ children }) => {
     // get cart item count 
 
     const getCartItemCount = () => {
-        let totalCount = 0;
-        for(const item in cartItems){
-            totalCount += cartItems[item];
-        }
-        return totalCount;
+        // let totalCount = 0;
+        // for(const item in cartItems){
+        //     totalCount += cartItems[item];
+        // }
+        // return totalCount;
+
+
+         if (!cartItems || Object.keys(cartItems).length === 0) return 0;
+
+    return Object.values(cartItems).reduce((total, qty) => total + Number(qty), 0);
     }
 
     // get cart total amount
@@ -169,10 +174,10 @@ export const AppContextProvider = ({ children }) => {
             try {
                 const {data} = await axios.post('/api/cart/update',{cartItems});
                 if(!data.success){
-                    toast.error(data.message);
+                    toast.error(data.message || "Failed to update cart");
                 }
             } catch (error) {
-                toast.error(error.message);
+                toast.error(error.message || "error Failed to update cart");
             }
         }
 

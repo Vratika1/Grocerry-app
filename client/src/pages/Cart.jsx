@@ -44,11 +44,11 @@ const Cart = () => {
                 if(data.addresses.length>0){
                     setSelectedAddress(data.addresses[0]);
                 }else{
-                    toast.error(data.message);
+                    toast.error(data.message || "No address found. Please add an address.");
                 }
             }
         } catch (error) {
-            toast.error(error.message); 
+            toast.error(error.message || "Failed to fetch addresses"); 
         }
     }
 
@@ -68,11 +68,11 @@ const Cart = () => {
                 });
 
                 if (data.success) {
-                    toast.success(data.message);
+                    toast.success(data.message || "Order placed successfully");
                     setCartItems({});  // clear cart
                     navigate("/my-orders");
                 } else {
-                    toast.error(data.message);
+                    toast.error(data.message || "Failed to place order");
                 }
             }
             else {
@@ -101,7 +101,7 @@ const Cart = () => {
             }
 
             } catch (error) {
-                toast.error(error.message);
+                toast.error(error.message || "Failed to place order");
             }
         };
 
