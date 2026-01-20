@@ -49,7 +49,7 @@ secure: process.env.NODE_ENV === 'production', // must be true in prod (HTTPS)
         return res.json({success:true ,  user: {
         email: user.email,
         name: user.name,
-        cartItems: user.cartItems || {}
+        cartItems: user.cartItems || []
     }})
 
     } catch (error) {
@@ -101,7 +101,7 @@ export const login = async (req,res) =>{
         return res.json({success:true ,  user: {
         email: user.email,
         name: user.name,
-        cartItems: user.cartItems || {}
+        cartItems: user.cartItems || []
     }})
 
 
@@ -122,7 +122,7 @@ export const isAuth = async (req,res)=>{
 
         // console.log("UserId in isAuth:", req.userId); // 👈 4
 
-        const user = await User.findById(userId).select("-password");
+        const user = await User.findById(userId).populate("cartItems.productId").select("-password");
 
         // console.log("User from DB:", user); // 👈 5
         
