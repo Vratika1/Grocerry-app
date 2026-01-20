@@ -20,20 +20,41 @@ export const placeOderCOD = async (req , res ) => {
         let amount = 0;
         const validItems = [];
 
-        for (const item of items) {
-        const product = await Product.findById(item.product); // backend expects 'product'
-        if (!product) continue; // skip deleted/missing products
+        // for (const item of items) {
+        // const product = await Product.findById(item.product); // backend expects 'product'
+        // if (!product) continue; // skip deleted/missing products
 
-        amount += product.offerPrice * item.quantity;
-        validItems.push(item);
+
+        // const quantity = Number(item.quantity); 
+
+        // amount += product.offerPrice * quantity;
+        // validItems.push(item);
+        // }
+
+
+        for (const item of items) {
+            const product = await Product.findById(item.product);
+            if (!product) continue;
+
+            const quantity = Number(item.quantity); // convert to number
+
+            // amount calculation
+            amount += product.offerPrice * quantity;
+
+            // push to validItems with numeric quantity
+            validItems.push({
+                product: item.product,  // product ID
+                quantity: quantity
+            });
         }
+
 
         if (validItems.length === 0) {
         return res.json({ success: false, message: "No valid products in cart" });
         }
 
         // add 2% tax
-        amount += Math.floor(amount * 0.02);
+        amount += Math.round(amount * 0.02);
 
         await Order.create({
         userId,
@@ -81,26 +102,53 @@ export const placeOderStripe = async (req , res ) => {
         let amount = 0;
         const validItems = [];
 
+        // for (const item of items) {
+        // const product = await Product.findById(item.product); // backend expects 'product'
+        // productData.push({
+        //     name : product.name,
+        //     price : product.offerPrice,
+        //     quantity : item.quantity,
+        // });
+
+        // if (!product) continue; // skip deleted/missing products
+
+        // const quantity = Number(item.quantity); 
+
+        // amount += product.offerPrice * quantity;
+        // validItems.push(item);
+        // }
+
+
         for (const item of items) {
-        const product = await Product.findById(item.product); // backend expects 'product'
-        productData.push({
-            name : product.name,
-            price : product.offerPrice,
-            quantity : item.quantity,
-        });
+            const product = await Product.findById(item.product); // backend expects 'product'
+            if (!product) continue; // skip deleted/missing products
 
-        if (!product) continue; // skip deleted/missing products
+            const quantity = Number(item.quantity); // convert to number
 
-        amount += product.offerPrice * item.quantity;
-        validItems.push(item);
+            // amount calculation
+            amount += product.offerPrice * quantity;
+
+            // push object with numeric quantity
+            validItems.push({
+                product: item.product, // backend expects 'product' id
+                quantity: quantity
+            });
+
+            // stripe data
+            productData.push({
+                name: product.name,
+                price: product.offerPrice,
+                quantity: quantity
+            });
         }
+
 
         if (validItems.length === 0) {
         return res.json({ success: false, message: "No valid products in cart" });
         }
 
         // add 2% tax
-        amount += Math.floor(amount * 0.02);
+        amount += Math.round(amount * 0.02);
 
         const order = await Order.create({
         userId,
@@ -124,9 +172,10 @@ export const placeOderStripe = async (req , res ) => {
                     product_data : {
                         name : item.name,
                     },
-                    unit_amount : Math.floor(item.price + item.price * 0.02) * 100,
+                    unit_amount : Math.round(Number(item.price) * 100), // price + 2% tax in cents
+
             },
-            quantity : item.quantity,
+            quantity : Number(item.quantity),
         }});
 
 
@@ -253,7 +302,7 @@ export const getUserOrders = async (req , res) =>{
             $or : [ { paymentType: "COD"} , {isPaid : true}]
         }).populate("items.product address").sort({createdAt : -1});
 
-           console.log("FOUND ORDERS 👉", orders.length);
+          
 
         res.json({success : true, orders});
         
