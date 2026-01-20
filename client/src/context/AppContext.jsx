@@ -135,7 +135,10 @@ export const AppContextProvider = ({ children }) => {
 
          if (!cartItems || Object.keys(cartItems).length === 0) return 0;
 
-    return Object.values(cartItems).reduce((total, qty) => total + Number(qty), 0);
+    return Object.values(cartItems).reduce((total, qty) => {
+        const n = parseInt(qty);
+        return total + (isNaN(n) ? 0 : n);
+    }, 0);
     }
 
     // get cart total amount
