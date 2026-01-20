@@ -168,15 +168,29 @@ export const placeOderStripe = async (req , res ) => {
 
             return{
                 price_data : {
-                    currency : "usd",
+                    currency : "inr",
                     product_data : {
                         name : item.name,
                     },
-                    unit_amount : Math.round(Number(item.price) * 100), // price + 2% tax in cents
+                    unit_amount: Math.round(Number(item.price) * 1.02 * 100)
+
 
             },
             quantity : Number(item.quantity),
         }});
+
+
+        const totalAmount = productData.reduce(
+            (sum, item) => sum + Number(item.price) * Number(item.quantity) * 1.02,
+            0
+        );
+
+        if(totalAmount < 50){ // minimum safe amount in INR
+            return res.status(400).json({
+                success: false,
+                message: "Minimum order amount for Stripe payment is ₹50"
+            });
+        }
 
 
         // create session

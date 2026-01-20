@@ -30,9 +30,23 @@ export const addProduct = async (req, res) => {
       })
     );
 
+     // split description string into array if it's a string
+    let descriptionArray = [];
+    if (productData.description) {
+      if (typeof productData.description === "string") {
+        descriptionArray = productData.description
+          .split("\n")      // split by new line
+          .map(str => str.trim())  // remove extra spaces
+          .filter(Boolean); // remove empty strings
+      } else if (Array.isArray(productData.description)) {
+        descriptionArray = productData.description; // already array
+      }
+    }
+
     // save product
     const product = await Product.create({
       ...productData,
+      description: descriptionArray,
       image: imagesUrl
     });
 
