@@ -83,16 +83,32 @@ export const AppContextProvider = ({ children }) => {
 
     const addToCart = (itemId) => {
     
-        let cartData = structuredClone(cartItems);
+        // let cartData = structuredClone(cartItems);
 
-        if(cartData[itemId]){
-            cartData[itemId] += 1;
-        }else{
-            cartData[itemId] = 1;
-        }
-        setCartItems(cartData);
+        // if(cartData[itemId]){
+        //     cartData[itemId] += 1;
+        // }else{
+        //     cartData[itemId] = 1;
+        // }
+        // setCartItems(cartData);
 
-        toast.success("added to cart")
+        // toast.success("added to cart")
+
+
+         let cartData = [...cartItems]; // copy array
+
+    const existingItem = cartData.find(item => item._id === itemId);
+    if (existingItem) {
+        existingItem.quantity += 1;
+    } else {
+        cartData.push({ _id: itemId, quantity: 1 });
+    }
+
+    setCartItems(cartData);
+    toast.success("Added to cart");
+
+
+
     }
 
     // updaate cart item quantity
@@ -133,11 +149,10 @@ export const AppContextProvider = ({ children }) => {
         // return totalCount;
 
 
-         if (!cartItems || Object.keys(cartItems).length === 0) return 0;
+        if (!cartItems || cartItems.length === 0) return 0;
 
-    return Object.values(cartItems).reduce((total, qty) => {
-        const n = parseInt(qty);
-        return total + (isNaN(n) ? 0 : n);
+    return cartItems.reduce((total, item) => {
+        return total + (item.quantity || 0);
     }, 0);
     }
 
