@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import "../models/Product.js"; 
 
 const userSchema = new mongoose.Schema({
 
@@ -6,7 +7,7 @@ const userSchema = new mongoose.Schema({
     email: {type:String, reuired:true, unique: true},
     password: {type:String , required:true},
     cartItems: [{
-            productId: { type: mongoose.Schema.Types.ObjectId, ref: 'Product' },
+            productId: { type: mongoose.Schema.Types.ObjectId, ref: 'product' },
             quantity: { type: Number, default: 1 }
         }],
 
