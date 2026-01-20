@@ -26,11 +26,13 @@ const Login = () => {
                     toast.error("Authorization failed. Please try login again.");
                 }
             } else {
-                toast.error(data.message);
+                toast.error(data.message || "Something went wrong!");
             }
 
         } catch (error) {
-            toast.error(error.message);
+              // Axios error handling
+    const msg = error.response?.data?.message || error.message || "Network Error";
+    toast.error(msg);
         }
     }
     
