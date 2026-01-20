@@ -10,18 +10,25 @@ const Login = () => {
     const {setShowUserLogin ,setUser , axios,navigate} = useAppContext();
 
     const onSubmitHandler = async(event)=>{
-        event.preventDefault();
+       event.preventDefault();
         try {
-            const {data} = await axios.post(`/api/user/${state}`,{name , email,password});
+            const { data } = await axios.post(`/api/user/${state}`, { name, email, password });
+            
+            if (data.success) {
+                // Make sure cookie is set and verified
+                const authRes = await axios.get('/api/user/is-auth', { withCredentials: true });
 
-            if(data.success){
-                navigate('/');
-                setUser(data.user);
-                setShowUserLogin(false);
-            }else{
+                if(authRes.data.success){
+                    setUser(authRes.data.user); // reliable user state
+                    setShowUserLogin(false);
+                    navigate('/');
+                } else {
+                    toast.error("Authorization failed. Please try login again.");
+                }
+            } else {
                 toast.error(data.message);
             }
-           
+
         } catch (error) {
             toast.error(error.message);
         }
