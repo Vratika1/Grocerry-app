@@ -62,11 +62,12 @@ const MyOrders = () => {
                                 <div className='flex flex-col justify-center md:ml-8 mb-4 md:mb-0'>
                                     <p>Quantity: {item.quantity || "1"}</p>
                                     <p>Status: {order.status}</p>
-                                    <p>Date: {new Date(order.createdAt).toLocaleDateString()}</p>
+                                    <p>Date: {order.createdAt ? new Date(order.createdAt).toLocaleDateString() : 'N/A'}</p>
+
                                 </div>
 
                                 <p className='text-primary text-lg font-medium'>
-                                    Amount: {currency}{item.product.price * (item.quantity || 1)}
+                                     Amount: {currency}{Number(item.totalAmount) || (Number(item.product.offerPrice || item.product.price) * Number(item.quantity || 1))}
                                 </p>
                             </div>
                         )
