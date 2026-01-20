@@ -31,8 +31,8 @@ const Login = () => {
 
         } catch (error) {
               // Axios error handling
-    const msg = error.response?.data?.message || error.message || "Network Error";
-    toast.error(msg);
+            const msg = error.response?.data?.message || error.message || "Network Error";
+            toast.error(msg);
         }
     }
     

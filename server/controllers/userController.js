@@ -130,31 +130,51 @@ export const isAuth = async (req,res)=>{
 // Logout user :/api/user/logout
 
 
-export const logout = async (req, res) =>{
+// export const logout = async (req, res) =>{
 
+//     try {
+//         // res.clearCookie('token' , {
+//         //     httpOnly: true,
+//         //     secure: process.env.NODE_ENV === 'production' ,
+//         //     sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'strict',
+//         // });
+
+
+//         res.cookie('token', token, {
+//   httpOnly: true,
+//   secure: process.env.NODE_ENV === 'production', // must be true in prod (HTTPS)
+//   sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax', // 'none' for cross-origin
+//   maxAge: 7 * 24 * 60 * 60 * 1000,
+// });
+
+
+//         return res.json({success:true, message : "Logged Out"});
+
+//     } catch (error) {
+//         console.log(error.message)
+//         res.json({success:false, message: error.message});
+//     }
+
+// }
+
+
+
+
+export const logout = async (req, res) => {
     try {
-        // res.clearCookie('token' , {
-        //     httpOnly: true,
-        //     secure: process.env.NODE_ENV === 'production' ,
-        //     sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'strict',
-        // });
+        // Clear the cookie by setting it to empty and maxAge 0
+        res.cookie('token', '', {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production', // must be true in prod (HTTPS)
+            sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+            maxAge: 0, // expire immediately
+        });
 
-
-        res.cookie('token', token, {
-  httpOnly: true,
-  secure: process.env.NODE_ENV === 'production', // must be true in prod (HTTPS)
-  sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax', // 'none' for cross-origin
-  maxAge: 7 * 24 * 60 * 60 * 1000,
-});
-
-
-        return res.json({success:true, message : "Logged Out"});
-
+        return res.json({ success: true, message: "Logged Out" });
     } catch (error) {
-        console.log(error.message)
-        res.json({success:false, message: error.message});
+        console.log(error.message);
+        res.json({ success: false, message: error.message });
     }
-
-}
+};
 
 
