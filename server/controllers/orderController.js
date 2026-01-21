@@ -131,8 +131,10 @@ export const placeOderStripe = async (req , res ) => {
         userId,
         items: validItems,
         amount,
-        address,
+        address: address,
         paymentType: "Online",
+        isPaid: false,            // ✅ REQUIRED
+        paymentStatus: "Pending" // ✅ REQUIRED
         });
 
         // STRIPE PAYMENT INTEGRATION

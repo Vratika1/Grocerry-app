@@ -41,7 +41,7 @@ const MyOrders = () => {
         {myOrders.map((order, index)=>{
             return (
                 <div key={index} className='border border-gray-300 rounded-lg mb-10 p-4 py-5 max-w-4xl'>
-                    <p className='flex justify-between md:items-center text-gay-400 md:font-medium max-md:flex-col'>
+                    <p className='flex justify-between md:items-center text-gray-400 md:font-medium max-md:flex-col'>
                         <span>OrderId : {order._id}</span>
                         <span>Payment : {order.paymentType}</span>
                         <span>Total Amount : {currency}{order.amount}</span>
@@ -67,7 +67,11 @@ const MyOrders = () => {
                                 </div>
 
                                 <p className='text-primary text-lg font-medium'>
-                                     Amount: {currency}{Number(item.totalAmount) || (Number(item.product.offerPrice || item.product.price) * Number(item.quantity || 1))}
+
+                                    Amount: {currency}{Number(item.totalAmount) || (Number(item.product.offerPrice || item.product.price) * Number(item.quantity || 1))
+}
+
+                                     {/* Amount: {currency}{Number(item.totalAmount) || (Number(item.product.offerPrice || item.product.price) * Number(item.quantity || 1))} */}
                                 </p>
                             </div>
                         )
