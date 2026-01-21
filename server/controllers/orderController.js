@@ -2,7 +2,7 @@ import Order from '../models/Order.js';
 import Product from '../models/Product.js';
 import Stripe from 'stripe';
 import User from '../models/User.js';
-import mongoose from 'mongoose';
+
 
 
 
@@ -138,6 +138,17 @@ export const placeOderStripe = async (req , res ) => {
         paymentStatus: "Pending" // ✅ REQUIRED
         });
 
+
+    // 🔹 SIMULATE WEBHOOK LOCALLY (only in development)
+    // if (process.env.NODE_ENV !== "production") {
+    //   const axios = require("axios");
+    //   axios.post("http://localhost:4000/api/order/stripe-webhook", {
+    //     type: "checkout.session.completed",
+    //     data: { object: { metadata: { orderId: order._id.toString(), userId } } },
+    //   });
+    //   console.log("⚡ Simulated Stripe webhook sent (local dev)");
+    // }
+
         // STRIPE PAYMENT INTEGRATION
 
         const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
@@ -203,12 +214,27 @@ export const stripeWebhook = async (req, res) => {
     const sig = req.headers["stripe-signature"];
     let event;
 
-    try {
-        event = stripe.webhooks.constructEvent(req.body, sig, process.env.STRIPE_WEBHOOK_SECRET);
-    } catch (error) {
-        console.error("Stripe webhook signature verification failed:", error.message);
-        return res.status(400).send(`Webhook Error: ${error.message}`);
-    }
+//      if (!sig) {
+//     // local test simulation
+//     event = req.body;
+//     console.log("⚡ Simulated Stripe event received (local dev)");
+//   } else {
+//     try {
+//       event = stripe.webhooks.constructEvent(req.body, sig, process.env.STRIPE_WEBHOOK_SECRET);
+//       console.log("✅ Stripe webhook verified successfully");
+//     } catch (err) {
+//       return res.status(400).send(`Webhook Error: ${err.message}`);
+//     }
+//   }
+
+        try {
+           event = stripe.webhooks.constructEvent(req.body, sig, process.env.STRIPE_WEBHOOK_SECRET);
+           console.log("✅ Stripe webhook verified successfully");
+        } catch (error) {
+            console.error("❌ Stripe webhook signature verification failed:", error.message);
+             return res.status(400).send(`Webhook Error: ${error.message}`);
+        }
+
 
     try {
         switch (event.type) {
@@ -223,10 +249,11 @@ export const stripeWebhook = async (req, res) => {
 
                 // mark order as paid
                 await Order.findByIdAndUpdate(
-                    mongoose.Types.ObjectId(orderId),
+                     orderId,   
                     { isPaid: true, paymentStatus: "Paid" }
                 );
 
+            
                 // clear user's cart
                 await User.findByIdAndUpdate(userId, { cartItems: [] }, { new: true });
 
