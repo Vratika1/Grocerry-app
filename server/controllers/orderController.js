@@ -2,6 +2,7 @@ import Order from '../models/Order.js';
 import Product from '../models/Product.js';
 import Stripe from 'stripe';
 import User from '../models/User.js';
+import mongoose from 'mongoose';
 
 
 
@@ -215,19 +216,26 @@ export const stripeWebhook = async (req, res) => {
             case "checkout.session.completed": {
                 const session = event.data.object;
 
+                 console.log("Stripe session metadata:", session.metadata);
+
                 // metadata we sent when creating session
                 const { orderId, userId } = session.metadata;
 
                 // mark order as paid
-                await Order.findByIdAndUpdate(orderId, { 
-                    isPaid: true, 
-                    paymentStatus: "Paid" 
-                }, { new: true });
+                await Order.findByIdAndUpdate(
+                    mongoose.Types.ObjectId(orderId),
+                    { isPaid: true, paymentStatus: "Paid" }
+                );
 
                 // clear user's cart
                 await User.findByIdAndUpdate(userId, { cartItems: [] }, { new: true });
 
                 console.log(`Order ${orderId} marked as paid`);
+
+                console.log("Event received:", event.type);
+                console.log("OrderID from metadata:", orderId);
+                console.log("UserID from metadata:", userId);
+
                 break;
             }
 
