@@ -27,8 +27,8 @@ const MyOrders = () => {
         <div className="w-16 h-0.5 bg-primary rounded-full"></div>
       </div>
 
-      {myOrders.map((order) => (
-        <div key={order._id} className="border border-gray-300 rounded-lg mb-10 p-4 py-5 max-w-4xl">
+      {myOrders.map((order , index) => (
+        <div key={index} className="border border-gray-300 rounded-lg mb-10 p-4 py-5 max-w-4xl">
           <p className="flex justify-between md:items-center text-gray-400 md:font-medium max-md:flex-col">
             <span>OrderId: {order._id}</span>
             <span>Payment: {order.paymentType}</span>
