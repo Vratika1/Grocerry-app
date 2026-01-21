@@ -139,15 +139,6 @@ export const placeOderStripe = async (req , res ) => {
         });
 
 
-    // 🔹 SIMULATE WEBHOOK LOCALLY (only in development)
-    // if (process.env.NODE_ENV !== "production") {
-    //   const axios = require("axios");
-    //   axios.post("http://localhost:4000/api/order/stripe-webhook", {
-    //     type: "checkout.session.completed",
-    //     data: { object: { metadata: { orderId: order._id.toString(), userId } } },
-    //   });
-    //   console.log("⚡ Simulated Stripe webhook sent (local dev)");
-    // }
 
         // STRIPE PAYMENT INTEGRATION
 
@@ -209,84 +200,154 @@ export const placeOderStripe = async (req , res ) => {
 
 // // Stripe webhook to confirm payment
 
-export const stripeWebhook = async (req, res) => {
-    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
-    const sig = req.headers["stripe-signature"];
-    let event;
 
-//      if (!sig) {
-//     // local test simulation
-//     event = req.body;
-//     console.log("⚡ Simulated Stripe event received (local dev)");
-//   } else {
-//     try {
-//       event = stripe.webhooks.constructEvent(req.body, sig, process.env.STRIPE_WEBHOOK_SECRET);
+export const stripeWebhook = async (req, res) => {
+  const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+  const sig = req.headers["stripe-signature"];
+  let event;
+
+  try {
+    if (sig) {
+      // ✅ Production: verify Stripe signature
+      event = stripe.webhooks.constructEvent(
+        req.body,
+        sig,
+        process.env.STRIPE_WEBHOOK_SECRET
+      );
+      console.log("✅ Stripe webhook verified successfully");
+    } else {
+      // ⚡ Local development simulation
+      event = req.body; // assume axios simulation sends the same structure
+      console.log("⚡ Simulated Stripe webhook received (local dev)");
+    }
+  } catch (error) {
+    console.error(
+      "❌ Stripe webhook signature verification failed:",
+      error.message
+    );
+    return res.status(400).send(`Webhook Error: ${error.message}`);
+  }
+
+  try {
+    switch (event.type) {
+      case "checkout.session.completed": {
+        const session = event.data.object;
+        const { orderId, userId } = session.metadata;
+
+        console.log("Stripe session metadata:", session.metadata);
+
+        // mark order as paid
+        await Order.findByIdAndUpdate(orderId, {
+          isPaid: true,
+          paymentStatus: "Paid",
+        });
+
+        // clear user's cart (works for local dev too)
+        await User.findByIdAndUpdate(userId, { cartItems: [] });
+
+        console.log(`Order ${orderId} marked as paid and cart cleared`);
+        break;
+      }
+
+      case "checkout.session.async_payment_failed": {
+        const session = event.data.object;
+        const { orderId } = session.metadata;
+
+        // mark order as failed
+        await Order.findByIdAndUpdate(orderId, { paymentStatus: "Failed" });
+
+        console.log(`Order ${orderId} payment failed`);
+        break;
+      }
+
+      default:
+        console.log(`Unhandled event type: ${event.type}`);
+    }
+
+    res.json({ received: true });
+  } catch (err) {
+    console.error("Stripe webhook processing error:", err.message);
+    res.status(500).send(`Webhook handler failed: ${err.message}`);
+  }
+};
+
+
+
+// export const stripeWebhook = async (req, res) => {
+//     const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+//     const sig = req.headers["stripe-signature"];
+//     let event;
+
+
+// try {
+//     // 🔹 Check if this is a real Stripe webhook (production)
+//     if (sig) {
+//       event = stripe.webhooks.constructEvent(
+//         req.body,
+//         sig,
+//         process.env.STRIPE_WEBHOOK_SECRET
+//       );
 //       console.log("✅ Stripe webhook verified successfully");
-//     } catch (err) {
-//       return res.status(400).send(`Webhook Error: ${err.message}`);
+//     } else {
+//       // 🔹 Local development simulation
+//       event = req.body;
+//       console.log("⚡ Simulated Stripe webhook received (local dev)");
 //     }
+//   } catch (error) {
+//     console.error(
+//       "❌ Stripe webhook signature verification failed:",
+//       error.message
+//     );
+//     return res.status(400).send(`Webhook Error: ${error.message}`);
 //   }
 
-        try {
-           event = stripe.webhooks.constructEvent(req.body, sig, process.env.STRIPE_WEBHOOK_SECRET);
-           console.log("✅ Stripe webhook verified successfully");
-        } catch (error) {
-            console.error("❌ Stripe webhook signature verification failed:", error.message);
-             return res.status(400).send(`Webhook Error: ${error.message}`);
-        }
+//     try {
+//         switch (event.type) {
 
+//             case "checkout.session.completed": {
+//                 const session = event.data.object;
 
-    try {
-        switch (event.type) {
+//                  console.log("Stripe session metadata:", session.metadata);
 
-            case "checkout.session.completed": {
-                const session = event.data.object;
+//                 // metadata we sent when creating session
+//                 const { orderId, userId } = session.metadata;
 
-                 console.log("Stripe session metadata:", session.metadata);
-
-                // metadata we sent when creating session
-                const { orderId, userId } = session.metadata;
-
-                // mark order as paid
-                await Order.findByIdAndUpdate(
-                     orderId,   
-                    { isPaid: true, paymentStatus: "Paid" }
-                );
+//                 // mark order as paid
+//                 await Order.findByIdAndUpdate(
+//                      orderId,   
+//                     { isPaid: true, paymentStatus: "Paid" }
+//                 );
 
             
-                // clear user's cart
-                await User.findByIdAndUpdate(userId, { cartItems: [] }, { new: true });
+//                 // clear user's cart
+//                 await User.findByIdAndUpdate(userId, { cartItems: [] }, { new: true });
 
-                console.log(`Order ${orderId} marked as paid`);
+//                 console.log(`Order ${orderId} marked as paid`);
 
-                console.log("Event received:", event.type);
-                console.log("OrderID from metadata:", orderId);
-                console.log("UserID from metadata:", userId);
+//                 break;
+//             }
 
-                break;
-            }
+//             case "checkout.session.async_payment_failed": {
+//                 const session = event.data.object;
+//                 const { orderId } = session.metadata;
 
-            case "checkout.session.async_payment_failed": {
-                const session = event.data.object;
-                const { orderId } = session.metadata;
+//                 // optional: delete order or mark failed
+//                 await Order.findByIdAndUpdate(orderId, { paymentStatus: "Failed" });
 
-                // optional: delete order or mark failed
-                await Order.findByIdAndUpdate(orderId, { paymentStatus: "Failed" });
+//                 console.log(`Order ${orderId} payment failed`);
+//                 break;
+//             }
 
-                console.log(`Order ${orderId} payment failed`);
-                break;
-            }
+//             default:
+//                 console.log(`Unhandled event type ${event.type}`);
+//         }
 
-            default:
-                console.log(`Unhandled event type ${event.type}`);
-        }
-
-        res.json({ received: true });
-    } catch (err) {
-        console.error("Stripe webhook processing error:", err.message);
-        res.status(500).send(`Webhook handler failed: ${err.message}`);
-    }
-};
+//         res.json({ received: true });
+//     } catch (err) {
+//         console.error("Stripe webhook processing error:", err.message);
+//         res.status(500).send(`Webhook handler failed: ${err.message}`);
+//     }
+// };
 
 
 
