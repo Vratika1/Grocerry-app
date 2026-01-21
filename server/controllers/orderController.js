@@ -139,6 +139,8 @@ export const placeOderStripe = async (req , res ) => {
         });
 
 
+          // ===== CLEAR CART IMMEDIATELY =====
+    await User.findByIdAndUpdate(userId, { cartItems: [] },{new: true});
 
         // STRIPE PAYMENT INTEGRATION
 
