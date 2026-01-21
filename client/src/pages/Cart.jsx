@@ -114,7 +114,7 @@ const Cart = () => {
 
                 if (data.success) {
                     toast.success(data.message || "Order placed successfully");
-                    setCartItems({});  // clear cart
+                    setCartItems([]);  // clear cart
                     navigate("/my-orders");
                 } else {
                     toast.error(data.message || "Failed to place order");
@@ -134,7 +134,7 @@ const Cart = () => {
 
                     if (data.success) {
                         window.location.replace(data.url);
-                        setCartItems({});  // clear cart
+                        setCartItems([]);  // clear cart
                     } else {
                         // Show backend error in toast
                         toast.error(data.message || "Stripe payment failed");

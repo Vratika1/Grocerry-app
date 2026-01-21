@@ -100,7 +100,7 @@ const Navbar = () => {
                 <NavLink to='/' onClick={()=> setOpen(false)}>Home</NavLink>
                 <NavLink to='/products'  onClick={()=> setOpen(false)}>All Products</NavLink>
              
-                {user &&  <NavLink to='/products'  onClick={()=> setOpen(false)}>My Orders</NavLink>
+                {user &&  <NavLink to='/my-orders'  onClick={()=> setOpen(false)}>My Orders</NavLink>
                 }
                 <NavLink to='/contact'  onClick={()=> setOpen(false)}>contact</NavLink>
 

@@ -20,17 +20,6 @@ export const placeOderCOD = async (req , res ) => {
         let amount = 0;
         const validItems = [];
 
-        // for (const item of items) {
-        // const product = await Product.findById(item.product); // backend expects 'product'
-        // if (!product) continue; // skip deleted/missing products
-
-
-        // const quantity = Number(item.quantity); 
-
-        // amount += product.offerPrice * quantity;
-        // validItems.push(item);
-        // }
-
 
         for (const item of items) {
             const product = await Product.findById(item.product);
@@ -64,6 +53,9 @@ export const placeOderCOD = async (req , res ) => {
         paymentType: "COD",
         });
 
+
+        // 🔥 CLEAR CART
+        await User.findByIdAndUpdate(userId, { cartItems: [] });
 
         return res.json({success : true, message : " Order Placed SuccessFully"})
 
@@ -102,22 +94,7 @@ export const placeOderStripe = async (req , res ) => {
         let amount = 0;
         const validItems = [];
 
-        // for (const item of items) {
-        // const product = await Product.findById(item.product); // backend expects 'product'
-        // productData.push({
-        //     name : product.name,
-        //     price : product.offerPrice,
-        //     quantity : item.quantity,
-        // });
-
-        // if (!product) continue; // skip deleted/missing products
-
-        // const quantity = Number(item.quantity); 
-
-        // amount += product.offerPrice * quantity;
-        // validItems.push(item);
-        // }
-
+        
 
         for (const item of items) {
             const product = await Product.findById(item.product); // backend expects 'product'
@@ -246,7 +223,7 @@ export const stripeWebhook = async (req, res) => {
                 }, { new: true });
 
                 // clear user's cart
-                await User.findByIdAndUpdate(userId, { cartItems: {} }, { new: true });
+                await User.findByIdAndUpdate(userId, { cartItems: [] }, { new: true });
 
                 console.log(`Order ${orderId} marked as paid`);
                 break;
