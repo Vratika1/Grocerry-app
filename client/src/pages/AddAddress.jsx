@@ -1,8 +1,9 @@
-import React, { use, useEffect } from 'react'
+import React, { useEffect } from 'react'
 import { useState } from 'react';
 import { assets } from '../assets/assets'
 import { useAppContext } from '../context/AppContext';
 import toast from 'react-hot-toast';
+import { useLocation } from 'react-router-dom';
 
 
 const InputField = ({type,placeholder,name,handleChange,address}) =>(
@@ -22,6 +23,9 @@ const AddAddress = () => {
 
 
     const {axios, navigate , user} = useAppContext();
+    const { search } = useLocation();
+    const query = new URLSearchParams(search);
+    const redirectTo = query.get('redirect') || 'cart';
 
     const [address, setAddress] = useState({
         firstName: '',
@@ -50,12 +54,13 @@ const AddAddress = () => {
 
         if(data.success){
             toast.success(data.message);
-            navigate('/cart');
+            navigate(`/${redirectTo}`);
         }else{
-            toast.error(error.message);
+            toast.error(data.message);
         }    
         } catch (error) {
-            console.error(error);
+            // console.error(error);
+            toast.error(error.message || "Failed to add address");
         }
     }
 

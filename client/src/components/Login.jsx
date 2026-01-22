@@ -7,7 +7,7 @@ const Login = () => {
     const [name, setName] = React.useState("");
     const [email, setEmail] = React.useState("");
     const [password, setPassword] = React.useState("");
-    const {setShowUserLogin ,setUser , axios,navigate ,setCartItems} = useAppContext();
+    const {setShowUserLogin ,setUser , axios, navigate, setCartItems, cartItems} = useAppContext();
 
     const onSubmitHandler = async(event)=>{
        event.preventDefault();
@@ -15,12 +15,55 @@ const Login = () => {
             const { data } = await axios.post(`/api/user/${state}`, { name, email, password });
             
             if (data.success) {
+                // Get localStorage cart before login clears it
+                const localStorageCart = localStorage.getItem('guestCart');
+                const guestCart = localStorageCart ? JSON.parse(localStorageCart) : [];
+                
+                // Also include current in-memory cart items (for guest users)
+                const localCart = cartItems.length > 0 ? cartItems : guestCart;
+
                 // Make sure cookie is set and verified
                 const authRes = await axios.get('/api/user/is-auth', { withCredentials: true });
 
                 if(authRes.data.success){
-                    setUser(authRes.data.user); // reliable user state
-                    setCartItems(authRes.data.user.cartItems || {});
+                    setUser(authRes.data.user);
+                    
+                    // Merge local cart with DB cart if there are local items
+                    if (localCart && localCart.length > 0) {
+                        try {
+                            const mergeRes = await axios.post('/api/cart/merge', { 
+                                localCartItems: localCart 
+                            });
+                            
+                            if (mergeRes.data.success) {
+                                // Normalize merged cart
+                                const mergedCart = mergeRes.data.cartItems.map(item => ({
+                                    productId: item.productId?._id || item.productId,
+                                    quantity: Number(item.quantity) || 1
+                                }));
+                                setCartItems(mergedCart);
+                                
+                                // Clear guest cart from localStorage
+                                localStorage.removeItem('guestCart');
+                            }
+                        } catch (mergeError) {
+                            console.log("Cart merge failed:", mergeError.message);
+                            // Fall back to DB cart
+                            const dbCart = authRes.data.user.cartItems || [];
+                            setCartItems(dbCart.map(item => ({
+                                productId: item.productId?._id || item.productId,
+                                quantity: Number(item.quantity) || 1
+                            })));
+                        }
+                    } else {
+                        // No local cart, use DB cart
+                        const dbCart = authRes.data.user.cartItems || [];
+                        setCartItems(dbCart.map(item => ({
+                            productId: item.productId?._id || item.productId,
+                            quantity: Number(item.quantity) || 1
+                        })));
+                    }
+                    
                     setShowUserLogin(false);
                     navigate('/');
                 } else {

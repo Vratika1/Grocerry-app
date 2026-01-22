@@ -348,6 +348,7 @@ export const AppContextProvider = ({ children }) => {
     const [products, setProducts] = useState([]);
     const [cartItems, setCartItems] = useState([]);
     const [searchQuery, setSearchQuery] = useState({});
+    const [isInitialized, setIsInitialized] = useState(false);
 
     const currency = import.meta.env.VITE_CURRENCY;
 
@@ -365,15 +366,14 @@ export const AppContextProvider = ({ children }) => {
     const fetchUser = async () => {
         try {
             const { data } = await axios.get("/api/user/is-auth");
-            console.log("fetchUser data:", data);
 
             if (data.success && data.user) {
                 setUser(data.user);
 
-                // 🔥 NORMALIZE CART
+                // NORMALIZE CART from DB
                 const normalizedCart = Array.isArray(data.user.cartItems)
                     ? data.user.cartItems.map(item => ({
-                          productId: item.productId || item._id,
+                          productId: item.productId?._id || item.productId,
                           quantity: Number(item.quantity) || 1
                       }))
                     : [];
@@ -381,13 +381,33 @@ export const AppContextProvider = ({ children }) => {
                 setCartItems(normalizedCart);
             } else {
                 setUser(null);
-                setCartItems([]);
+                // Load guest cart from localStorage
+                const guestCart = localStorage.getItem('guestCart');
+                if (guestCart) {
+                    try {
+                        setCartItems(JSON.parse(guestCart));
+                    } catch {
+                        setCartItems([]);
+                    }
+                } else {
+                    setCartItems([]);
+                }
             }
         } catch (error) {
-            console.log("fetchUser error:", error.message);
             setUser(null);
-            setCartItems([]);
+            // Load guest cart from localStorage
+            const guestCart = localStorage.getItem('guestCart');
+            if (guestCart) {
+                try {
+                    setCartItems(JSON.parse(guestCart));
+                } catch {
+                    setCartItems([]);
+                }
+            } else {
+                setCartItems([]);
+            }
         }
+        setIsInitialized(true);
     };
 
     /* ================= PRODUCTS ================= */
@@ -478,20 +498,28 @@ export const AppContextProvider = ({ children }) => {
         fetchUser();
     }, []);
 
-    // 🔥 Sync cart to DB
+    // Sync cart: to DB for logged-in users, to localStorage for guests
     useEffect(() => {
-        if (!user) return;
+        // Wait for initialization to avoid overwriting
+        if (!isInitialized) return;
 
-        const syncCart = async () => {
-            try {
-                await axios.post("/api/cart/update", { cartItems });
-            } catch (error) {
-                console.log("Cart sync failed:", error.message);
+        if (user) {
+            // Logged-in user: sync cart to MongoDB
+            const syncCartToDB = async () => {
+                try {
+                    await axios.post("/api/cart/update", { cartItems });
+                } catch (error) {
+                    console.log("Cart sync to DB failed:", error.message);
+                }
+            };
+            syncCartToDB();
+        } else {
+            // Guest user: sync cart to localStorage
+            if (cartItems.length > 0) {
+                localStorage.setItem('guestCart', JSON.stringify(cartItems));
             }
-        };
-
-        syncCart();
-    }, [cartItems, user]);
+        }
+    }, [cartItems, user, isInitialized]);
 
     /* ================= CONTEXT ================= */
     const value = {

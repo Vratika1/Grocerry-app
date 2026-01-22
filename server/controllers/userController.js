@@ -2,6 +2,7 @@ import User from "../models/User.js";
 import bcrypt from 'bcrypt'
 import  jwt from "jsonwebtoken";
 import Product from "../models/Product.js";
+import { sendWelcomeEmail } from "../configs/email.js";
 
 
 // Register User : /api/user/register
@@ -28,6 +29,10 @@ export const register = async (req, res) =>{
 
         const user = await User.create({name,email,password : hashedPassword} );
 
+        // Send welcome email (async, don't block response)
+        sendWelcomeEmail({ name, email }).catch(err => 
+          console.error('Welcome email failed:', err.message)
+        );
 
         const token = jwt.sign({id:user._id}, process.env.SECRET_KEY, {expiresIn:'7d'});
 

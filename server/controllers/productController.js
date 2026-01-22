@@ -1,5 +1,7 @@
 import {v2 as cloudinary} from "cloudinary";
 import Product from "../models/Product.js";
+import User from "../models/User.js";
+import { sendPriceDropEmail } from "../configs/email.js";
 
 
 // add product : /api/product/add
@@ -114,3 +116,73 @@ export const changeStock = async (req , res) => {
     }
 
 }
+
+
+// update product : /api/product/update
+export const updateProduct = async (req, res) => {
+    try {
+        const { id, name, description, category, price, offerPrice } = req.body;
+
+        if (!id) {
+            return res.json({ success: false, message: "Product ID is required" });
+        }
+
+        // Get current product to check price change
+        const currentProduct = await Product.findById(id);
+        if (!currentProduct) {
+            return res.json({ success: false, message: "Product not found" });
+        }
+
+        const oldOfferPrice = currentProduct.offerPrice;
+        const newOfferPrice = Number(offerPrice);
+
+        // Prepare update data
+        const updateData = {};
+        if (name) updateData.name = name;
+        if (category) updateData.category = category;
+        if (price) updateData.price = Number(price);
+        if (offerPrice) updateData.offerPrice = newOfferPrice;
+        
+        if (description) {
+            if (typeof description === "string") {
+                updateData.description = description
+                    .split("\n")
+                    .map(str => str.trim())
+                    .filter(Boolean);
+            } else if (Array.isArray(description)) {
+                updateData.description = description;
+            }
+        }
+
+        // Update product
+        const updatedProduct = await Product.findByIdAndUpdate(id, updateData, { new: true });
+
+        // Check if price decreased - send notifications
+        if (newOfferPrice && newOfferPrice < oldOfferPrice) {
+            // Find all users who have this product in their cart
+            const usersWithProductInCart = await User.find({
+                'cartItems.productId': id
+            });
+
+            // Send price drop email to each user (async, don't wait)
+            usersWithProductInCart.forEach(async (user) => {
+                try {
+                    await sendPriceDropEmail(user, updatedProduct, oldOfferPrice, newOfferPrice);
+                } catch (emailError) {
+                    console.error(`Failed to send price drop email to ${user.email}:`, emailError.message);
+                }
+            });
+        }
+
+        res.json({ 
+            success: true, 
+            message: "Product updated successfully", 
+            product: updatedProduct,
+            priceDropNotificationsSent: newOfferPrice < oldOfferPrice ? true : false
+        });
+
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+};

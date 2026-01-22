@@ -88,16 +88,16 @@ const Cart = () => {
                 setAddresses(data.addresses);
                 if(data.addresses.length>0){
                     setSelectedAddress(data.addresses[0]);
-                }else{
-                    toast.error(data.message || "No address found. Please add an address.");
                 }
+                // No toast - we'll show "Add Address" button instead
             }
         } catch (error) {
-            toast.error(error.message || "Failed to fetch addresses"); 
+            // Silent fail - user can add address
         }
     }
 
     const placeOrder = async () => {
+    if (!user) return toast.error("Please login to place order");
     if (!selectedAddress) return toast.error("Please select an address");
     if (!cartArray.length) return toast.error("Your cart is empty");
 
@@ -207,7 +207,7 @@ const Cart = () => {
                     <div>
                         <p className="hidden md:block font-semibold">{item.product.name}</p>
                         <div className="font-normal text-gray-500/70">
-                        <p>Weight: <span>{item.product.weight || "N/A"}</span></p>
+                        {item.product.weight && <p>Weight: <span>{item.product.weight}</span></p>}
                         <div className='flex items-center'>
                             <p>Qty:</p>
                             {/* <select
@@ -308,9 +308,21 @@ const Cart = () => {
                     </p>
                 </div>
 
-                <button onClick={() => {placeOrder()}} className="w-full py-3 mt-6 cursor-pointer bg-primary text-white font-medium hover:bg-primary-dull transition">
-                   {paymentMethod === 'COD' ? 'Place Order' : 'Proceed to Pay'}
-                </button>
+                {addresses.length === 0 ? (
+                    <button 
+                        onClick={() => navigate('/add-address?redirect=cart')} 
+                        className="w-full py-3 mt-6 cursor-pointer bg-orange-500 text-white font-medium hover:bg-orange-600 transition"
+                    >
+                        Add Address to Continue
+                    </button>
+                ) : (
+                    <button 
+                        onClick={() => {placeOrder()}} 
+                        className="w-full py-3 mt-6 cursor-pointer bg-primary text-white font-medium hover:bg-primary-dull transition"
+                    >
+                        {paymentMethod === 'COD' ? 'Place Order' : 'Proceed to Pay'}
+                    </button>
+                )}
             </div>
         </div>
     ) : null;

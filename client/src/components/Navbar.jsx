@@ -8,7 +8,7 @@ import toast from 'react-hot-toast'
 const Navbar = () => {
     const [open, setOpen] = useState(false);
     
-    const { user,setUser,navigate,axios, setShowUserLogin, setSearchQuery , searchQuery,getCartItemCount,setCartItems} = useAppContext();
+    const { user, setUser, navigate, axios, setShowUserLogin, setSearchQuery, searchQuery, getCartItemCount, setCartItems } = useAppContext();
 
     const logout = async () => {
 
@@ -16,8 +16,17 @@ const Navbar = () => {
             const {data} = await axios.post('/api/user/logout');
             if(data.success){
                 toast.success(data.message);
+                
+                // Clear user state first
                 setUser(null);
+                
+                // Clear cart state (DB cart is preserved, this just clears UI)
+                // Note: Don't save empty cart to localStorage - that's for guests only
                 setCartItems([]);
+                
+                // Clear any guest cart that might exist
+                localStorage.removeItem('guestCart');
+                
                 navigate('/');
             }else{
                 toast.error(data.message);
