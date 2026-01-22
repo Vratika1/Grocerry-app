@@ -1,7 +1,7 @@
 import cookieParser from "cookie-parser";
 import express from "express";
 import cors from 'cors'
-// import bodyParser from "body-parser"; 
+import bodyParser from "body-parser"; 
 import connectDB from "./configs/db.js";
 import 'dotenv/config';
 import userRouter from "./routes/userRoute.js";
@@ -29,7 +29,7 @@ const allowedOrigins = [process.env.NODE_ENV === 'production'
 ]
 
 
-app.post('/stripe', express.raw({type : "application/json"}), stripeWebhook)
+app.post('/stripe', bodyParser.raw({ type: "application/json" }), stripeWebhook)
 
 // app.post(
 //   '/stripe-webhook',
