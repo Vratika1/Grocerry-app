@@ -23,38 +23,35 @@ await connectCloudinary();
 
 
 // allow multiple origins
-const allowedOrigins = [process.env.NODE_ENV === 'production'
-    ? 'https://grocerry-app-frontend.vercel.app'
-    : 'http://localhost:5173'
+const allowedOrigins = [
+    'https://grocerry-app-frontend.vercel.app',
+    'http://localhost:5173',
+    'http://localhost:3000'
 ]
 
-
+// Stripe webhook FIRST (before CORS and body parser) - must use raw body
 app.post('/stripe', bodyParser.raw({ type: "application/json" }), stripeWebhook)
 
-// app.post(
-//   '/stripe-webhook',
-//   bodyParser.raw({ type: 'application/json' }),
-//   stripeWebhook
-// );
-
-// Middeleweare configuration
-
-
-
-// app.use(cors({origin: allowedOrigins, credentials :true }))
-
+// Middleware configuration - CORS with permissive origin handling
 app.use(cors({
   origin: function(origin, callback) {
-    // allow requests with no origin (like Postman)
+    // allow requests with no origin (like Postman, curl, direct requests)
     if (!origin) return callback(null, true);
 
-    if (allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
+    // allow localhost variants for development
+    if (origin.includes('localhost') || origin.includes('127.0.0.1')) {
+      return callback(null, true);
     }
+
+    // allow Vercel deployments
+    if (allowedOrigins.includes(origin) || origin.includes('vercel.app')) {
+      return callback(null, true);
+    }
+
+    console.warn(`CORS blocked origin: ${origin}`);
+    callback(new Error('Not allowed by CORS'));
   },
-  credentials: true // if you need cookies/auth headers
+  credentials: true
 }));
 
 

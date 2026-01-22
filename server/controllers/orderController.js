@@ -208,6 +208,11 @@ export const stripeWebhook = async (req, res) => {
   const sig = req.headers["stripe-signature"];
   let event;
 
+  console.log("=== WEBHOOK RECEIVED ===");
+  console.log("Signature present:", !!sig);
+  console.log("Body type:", typeof req.body);
+  console.log("Headers:", Object.keys(req.headers));
+
   try {
     if (sig) {
       // ✅ Production: verify Stripe signature
@@ -238,30 +243,34 @@ export const stripeWebhook = async (req, res) => {
   }
 
   try {
+    console.log("Event type:", event.type);
+    console.log("Event data:", JSON.stringify(event.data, null, 2));
+
     switch (event.type) {
       case "checkout.session.completed": {
         const session = event.data.object;
         const { orderId, userId } = session.metadata;
 
+        console.log("✅ checkout.session.completed triggered");
         console.log("Stripe session metadata:", session.metadata);
+        console.log("Session payment_status:", session.payment_status);
 
-        // mark order as paid
-                // Only mark as paid if Stripe reports payment was completed
-                if (!session.payment_status || session.payment_status === "paid") {
-                    await Order.findByIdAndUpdate(orderId, {
-                        isPaid: true,
-                        paymentStatus: "Paid",
-                    });
-                    console.log(`Order ${orderId} marked as paid`);
-                } else {
-                    await Order.findByIdAndUpdate(orderId, { paymentStatus: "Pending" });
-                    console.log(`Order ${orderId} payment not completed: ${session.payment_status}`);
-                }
+        // Only mark as paid if Stripe reports payment was completed
+        if (!session.payment_status || session.payment_status === "paid") {
+          const updated = await Order.findByIdAndUpdate(orderId, {
+            isPaid: true,
+            paymentStatus: "Paid",
+          }, { new: true });
+          console.log(`✅ Order ${orderId} marked as paid. Updated doc:`, updated);
+        } else {
+          await Order.findByIdAndUpdate(orderId, { paymentStatus: "Pending" });
+          console.log(`⚠️ Order ${orderId} payment not completed: ${session.payment_status}`);
+        }
 
         // clear user's cart (works for local dev too)
         await User.findByIdAndUpdate(userId, { cartItems: [] });
 
-                console.log(`Order ${orderId} processed and cart cleared`);
+        console.log(`Order ${orderId} processed and cart cleared`);
         break;
       }
 
@@ -269,20 +278,22 @@ export const stripeWebhook = async (req, res) => {
         const session = event.data.object;
         const { orderId } = session.metadata;
 
-        // mark order as failed
-        await Order.findByIdAndUpdate(orderId, { paymentStatus: "Failed" });
-
+        console.log("❌ checkout.session.async_payment_failed triggered");
         console.log(`Order ${orderId} payment failed`);
+
+        // mark order as failed
+        await Order.findByIdAndUpdate(orderId, { paymentStatus: "Failed", isPaid: false });
         break;
       }
 
       default:
-        console.log(`Unhandled event type: ${event.type}`);
+        console.log(`⚠️ Unhandled event type: ${event.type}`);
     }
 
     res.json({ received: true });
   } catch (err) {
     console.error("Stripe webhook processing error:", err.message);
+    console.error("Stack:", err.stack);
     res.status(500).send(`Webhook handler failed: ${err.message}`);
   }
 };
