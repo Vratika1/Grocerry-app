@@ -218,9 +218,16 @@ export const stripeWebhook = async (req, res) => {
       );
       console.log("✅ Stripe webhook verified successfully");
     } else {
-      // ⚡ Local development simulation
-      event = req.body; // assume axios simulation sends the same structure
-      console.log("⚡ Simulated Stripe webhook received (local dev)");
+            // ⚡ Local development simulation - parse raw body (bodyParser.raw used)
+            try {
+                const raw = req.body;
+                const parsed = Buffer.isBuffer(raw) ? JSON.parse(raw.toString()) : raw;
+                event = parsed;
+                console.log("⚡ Simulated Stripe webhook received (local dev)");
+            } catch (parseErr) {
+                console.error("Failed to parse simulated webhook body:", parseErr.message);
+                return res.status(400).send(`Webhook Error: ${parseErr.message}`);
+            }
     }
   } catch (error) {
     console.error(
@@ -239,15 +246,22 @@ export const stripeWebhook = async (req, res) => {
         console.log("Stripe session metadata:", session.metadata);
 
         // mark order as paid
-        await Order.findByIdAndUpdate(orderId, {
-          isPaid: true,
-          paymentStatus: "Paid",
-        });
+                // Only mark as paid if Stripe reports payment was completed
+                if (!session.payment_status || session.payment_status === "paid") {
+                    await Order.findByIdAndUpdate(orderId, {
+                        isPaid: true,
+                        paymentStatus: "Paid",
+                    });
+                    console.log(`Order ${orderId} marked as paid`);
+                } else {
+                    await Order.findByIdAndUpdate(orderId, { paymentStatus: "Pending" });
+                    console.log(`Order ${orderId} payment not completed: ${session.payment_status}`);
+                }
 
         // clear user's cart (works for local dev too)
         await User.findByIdAndUpdate(userId, { cartItems: [] });
 
-        console.log(`Order ${orderId} marked as paid and cart cleared`);
+                console.log(`Order ${orderId} processed and cart cleared`);
         break;
       }
 
