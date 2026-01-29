@@ -69,6 +69,9 @@ import vanilla_muffins_image from "./vanilla_muffins_image.png";
 import quinoa_image from "./quinoa_image.png";
 import brown_rice_image from "./brown_rice_image.png";
 import barley_image from "./barley_image.png";
+import bg_image from "./bgGrocery1.jpg";
+import bg_image1 from "./bgGrocerry2.jpg";
+import bg_image2 from "./bgGrocery3.jpg";
 
 export const assets = {
   logo,
@@ -98,6 +101,9 @@ export const assets = {
   bottom_banner_image_sm,
   add_address_iamge,
   box_icon,
+  bg_image,
+  bg_image1,
+  bg_image2
 };
 
 export const categories = [
