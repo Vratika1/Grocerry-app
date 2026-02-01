@@ -45,10 +45,10 @@ export const register = async (req, res) =>{
 
 
         res.cookie('token', token, {
-  httpOnly: true,
-secure: process.env.NODE_ENV === 'production', // must be true in prod (HTTPS)
-  sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax', // 'none' for cross-origin
-  maxAge: 7 * 24 * 60 * 60 * 1000,
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production', // must be true in prod (HTTPS)
+        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax', // 'none' for cross-origin
+        maxAge: 7 * 24 * 60 * 60 * 1000,
 });
 
 
